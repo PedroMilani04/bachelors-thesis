@@ -161,9 +161,23 @@ project/
 └── README.md
 ```
 
+
 ## Dependencies
 
 ```bash
 pip install pandas numpy xgboost scikit-learn yfinance matplotlib seaborn
 ```
 
+| Library | Usage |
+|---|---|
+| `yfinance` | Data acquisition for stocks, rates, and commodities |
+| `pandas` / `numpy` | Feature engineering, Deltas, Accelerations |
+| `scikit-learn` | RFE (Feature Selection), compute_sample_weight |
+| `xgboost` | Core classification algorithm (`objective='multi:softprob'`) |
+| `matplotlib` / `seaborn` | Confusion matrices, EV distribution plots |
+
+---
+
+## Academic Context
+Developed as an Undergraduate Thesis in Computer Science at **FCT UNESP** (Faculdade de Ciências e Tecnologia da Universidade Estadual Paulista), Presidente Prudente - SP, Brazil. 
+**Advisor:** Prof. Danilo.
