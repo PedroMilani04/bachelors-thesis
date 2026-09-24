@@ -142,30 +142,10 @@ The model's business viability was tested by segregating Expected Value (EV) by 
 
 ---
 
-## Repository Structure
-
-```text
-project/
-├── 0-raw-data/                 ← yfinance extractions (Equities, Rates, Oil)
-├── 1-processed-data/           ← Cleaned datasets post-transforming.py
-├── 2-features/                 ← CSVs with all generated technical/macro features
-├── 3-labels/                   ← Triple Barrier outputs
-├── 4-modelos-generalistas/     ← Deprecated baselines (MLP, RF, SVM)
-├── 5-modelos-especialistas/    ← Core Pipeline: XGBoost per ticker
-│   ├── xgboost/
-│   │   ├── rfe/                ← RFE feature selection logs & charts
-│   │   └── ev_analysis/        ← Expected Value calculations
-├── src/
-│   ├── transforming.py         ← Technical indicators and Lags module
-│   └── data_acquisition.py     ← API calls and Macro feature engineering
-└── README.md
-```
-
-
 ## Dependencies
 
 ```bash
-pip install pandas numpy xgboost scikit-learn yfinance matplotlib seaborn
+pip install pandas numpy xgboost scikit-learn yfinance matplotlib seaborn shap
 ```
 
 | Library | Usage |
@@ -175,9 +155,10 @@ pip install pandas numpy xgboost scikit-learn yfinance matplotlib seaborn
 | `scikit-learn` | RFE (Feature Selection), compute_sample_weight |
 | `xgboost` | Core classification algorithm (`objective='multi:softprob'`) |
 | `matplotlib` / `seaborn` | Confusion matrices, EV distribution plots |
+| `shap` | Additive Explanations for each of the features |
 
 ---
 
 ## Academic Context
 Developed as an Undergraduate Thesis in Computer Science at **FCT UNESP** (Faculdade de Ciências e Tecnologia da Universidade Estadual Paulista), Presidente Prudente - SP, Brazil. 
-**Advisor:** Prof. Danilo.
+**Advisor:** Danillo Roberto Pereira, PhD.
