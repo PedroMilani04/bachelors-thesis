@@ -17,7 +17,7 @@ FIM = '2024-12-31'
 
 # Parâmetros da Barreira Tripla (Triple Barrier)
 HORIZONTE_DIAS = 180  # (k)
-ALVO_RETORNO = 0.07  # (tau)
+ALVO_RETORNO = 0.10  # (tau)
 
 # --- DATAS DAS ELEIÇÕES PRESIDENCIAIS ---
 # Brasil: 2º turno (resultado definitivo). Próxima projeção = 4 anos após 2022.

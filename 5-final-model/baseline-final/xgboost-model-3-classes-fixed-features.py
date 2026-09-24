@@ -3,20 +3,24 @@ import numpy as np
 import xgboost as xgb
 import matplotlib.pyplot as plt
 import seaborn as sns
+import shap
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.utils.class_weight import compute_sample_weight
 import os
 import sys
 
 # Adiciona o diretório raiz do projeto ao path para importar o transforming
+# Estrutura: tcc/5-final-model/baseline-final/  →  raiz = dois níveis acima
 current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
+parent_dir = os.path.dirname(current_dir)          # 5-final-model/
+root_dir = os.path.dirname(parent_dir)              # tcc/ (onde transforming.py está)
+sys.path.append(root_dir)
 
 import transforming  # Seu arquivo atualizado com Lags, Slopes, ATR, etc.
 
 # --- CONFIGURAÇÕES ---
-INPUT_FOLDER = os.path.join(current_dir, '1-processed-data')
-RAW_DATA_FOLDER = os.path.join(current_dir, '0-raw-data')
+INPUT_FOLDER = os.path.join(root_dir, '1-processed-data')
+RAW_DATA_FOLDER = os.path.join(root_dir, '0-raw-data')
 TARGET_COL = 'Alvo'
 
 # COLUNAS FIXAS (SEM RFE)
@@ -267,8 +271,57 @@ def xgboostModel():
     plt.savefig(output_path_img, dpi=300)
     print(f"\n[SUCESSO] Imagem salva em: '{output_path_img}'")
 
-    # --- 7. EXPORTAÇÃO DOS DADOS DE TREINO E TESTE ---
-    print("\n--- 7. EXPORTANDO DADOS (TREINO/TESTE) ---")
+    # --- 7. EXPLICABILIDADE (SHAP) ---
+    print("\n--- 7. GERANDO EXPLICAÇÕES SHAP ---")
+
+    explainer = shap.TreeExplainer(model)
+    shap_explanation = explainer(X_test_scaled)  # shape: (n_amostras, n_features, n_classes)
+
+    # Beeswarm por classe (Venda / Neutro / Compra)
+    for idx, nome_classe in enumerate(classes_nomes):
+        plt.figure()
+        shap.summary_plot(
+            shap_explanation[:, :, idx],
+            X_test_scaled,
+            show=False,
+            plot_size=(10, 6)
+        )
+        plt.title(f"SHAP - Impacto das Features na Classe '{nome_classe}'", fontsize=13, fontweight='bold')
+        plt.tight_layout()
+        shap_path_classe = os.path.join(current_dir, f'shap-summary-{nome_classe.lower()}.png')
+        plt.savefig(shap_path_classe, dpi=300)
+        plt.close()
+        print(f"   [SUCESSO] SHAP summary ({nome_classe}) salvo em: '{shap_path_classe}'")
+
+    # Importância global (média do |SHAP| entre as 3 classes)
+    mean_abs_shap = np.abs(shap_explanation.values).mean(axis=(0, 2))
+    importancia_df = pd.DataFrame({
+        'Feature': available_features,
+        'Importancia_SHAP_Media': mean_abs_shap
+    }).sort_values('Importancia_SHAP_Media', ascending=False)
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(data=importancia_df, x='Importancia_SHAP_Media', y='Feature', color='#c0392b')
+    plt.title("Importância Global das Features (Média |SHAP| entre as 3 classes)", fontsize=13, fontweight='bold')
+    plt.xlabel('Média |SHAP value|')
+    plt.tight_layout()
+    shap_path_global = os.path.join(current_dir, 'shap-importancia-global.png')
+    plt.savefig(shap_path_global, dpi=300)
+    plt.close()
+    print(f"   [SUCESSO] Importância global salva em: '{shap_path_global}'")
+
+    # Exporta os valores SHAP brutos (um bloco de linhas por classe) para análise posterior
+    shap_values_export = []
+    for idx, nome_classe in enumerate(classes_nomes):
+        df_classe = pd.DataFrame(shap_explanation.values[:, :, idx], columns=available_features)
+        df_classe['Classe'] = nome_classe
+        shap_values_export.append(df_classe)
+    shap_export_path = os.path.join(current_dir, 'shap_values_teste_3_classes.csv')
+    pd.concat(shap_values_export, ignore_index=True).to_csv(shap_export_path, index=False)
+    print(f"   [SUCESSO] Valores SHAP exportados em: '{shap_export_path}'")
+
+    # --- 8. EXPORTAÇÃO DOS DADOS DE TREINO E TESTE ---
+    print("\n--- 8. EXPORTANDO DADOS (TREINO/TESTE) ---")
     cols = X_train.columns
     
     if isinstance(X_train_scaled, np.ndarray):
